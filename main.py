@@ -110,6 +110,7 @@ def valid(test_loader, model):
     return y_true, y_pred
 
 def test(test_loader, model):
+    print("\n=== Test ===")
     y_true, y_pred = valid(test_loader, model)
     auc = metrics.average_precision_score(y_true, y_pred)
     print("\n[TEST] auc: {}".format(auc))
