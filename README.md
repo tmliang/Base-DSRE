@@ -16,10 +16,10 @@ Download the dataset from [here](https://github.com/thunlp/HNRE/tree/master/raw_
 python main.py
 ```
 
-## Best Experimental Result
+## Experimental Result
 
 | Encoder | P@100 | P@200 | P@300 | Mean | AUC |
 | :-----: | :---: | :---: | :---: | :--: | :-: |
 | CNN | 74.0 | 73.0 | 70.7 | 71.4 | 40.3 |
-| PCNN | 86.0 | 77.0 | 73.3 | 74.6 | 41.3 |
+| PCNN | 77.0 | 75.0 | 72.7 | 73.4 | 41.4 |
 | BiGRU | 86.0 | 77.0 | 73.3 | 74.6 | 41.3 |
