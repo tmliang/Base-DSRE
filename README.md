@@ -1,4 +1,4 @@
-# Base-DSRE
+# Base DSRE
 Baselines of sentence-level attention-based distantly supervised relation extraction models.
 
 ## Requirements
