@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import os
 import sys
 import random
 import numpy as np
@@ -26,7 +27,7 @@ def train(train_loader, test_loader, opt):
     optimizer = optim.SGD(model.parameters(), lr=opt['lr'], weight_decay=1e-5)
     not_best_count = 0
     best_auc = 0
-    best_model = None
+    best_model = model
     for epoch in range(opt['epoch']):
         model.train()
         print("\n=== Epoch %d train ===" % epoch)
@@ -37,8 +38,8 @@ def train(train_loader, test_loader, opt):
             if torch.cuda.is_available():
                 for d in range(len(data)):
                     data[d] = data[d].cuda()
-            word, pos1, pos2, ent1, ent2, mask, scope, rel = data
-            output = model(word, pos1, pos2, mask, scope, rel)
+            word, pos1, pos2, ent1, ent2, mask, length, scope, rel = data
+            output = model(word, pos1, pos2, mask, length, scope, rel)
             loss = criterion(output, rel)
             _, pred = torch.max(output, -1)
             acc = (pred == rel).sum().item() / rel.shape[0]
@@ -59,7 +60,7 @@ def train(train_loader, test_loader, opt):
             optimizer.step()
             optimizer.zero_grad()
 
-        if (epoch + 1) % opt['val_iter'] == 0 and epoch > 5:
+        if (epoch + 1) % opt['val_iter'] == 0 and avg_pos_acc.avg > 0.5:
             print("\n=== Epoch %d val ===" % epoch)
             y_true, y_pred = valid(test_loader, model)
             auc = metrics.average_precision_score(y_true, y_pred)
@@ -86,8 +87,8 @@ def valid(test_loader, model):
         for i, data in enumerate(test_loader):
             if torch.cuda.is_available():
                 data = [x.cuda() for x in data]
-            word, pos1, pos2, ent1, ent2, mask, scope, rel = data
-            output = model(word, pos1, pos2, mask, scope)
+            word, pos1, pos2, ent1, ent2, mask, length, scope, rel = data
+            output = model(word, pos1, pos2, mask, length, scope)
             label = rel.argmax(-1)
             _, pred = torch.max(output, -1)
             acc = (pred == label).sum().item() / label.shape[0]
@@ -120,11 +121,34 @@ def test(test_loader, model):
     print("P@200: {0:.1f}".format(p200*100))
     print("P@300: {0:.1f}".format(p300*100))
     print("mean: {0:.1f}".format((p300+p200+p300)/0.03))
+    return y_true, y_pred
+
+def save(model_name, model, y_true, y_pred):
+    print("Saving result...")
+    save_dir = os.path.join('result', model_name)
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    order = np.argsort(y_pred)[::-1]
+    correct = 0.
+    total = y_true.sum()
+    precision = []
+    recall = []
+    for i, o in enumerate(order):
+        correct += y_true[o]
+        precision.append(float(correct) / (i + 1))
+        recall.append(float(correct) / total)
+    precision = np.array(precision)
+    recall = np.array(recall)
+    torch.save({'state_dict': model.state_dict()}, os.path.join(save_dir, 'model.pth.tar'))
+    np.save(os.path.join(save_dir, 'precision.npy'), precision)
+    np.save(os.path.join(save_dir, 'recall.npy'), recall)
+
 
 if __name__ == '__main__':
     opt = vars(config())
     train_loader = data_loader(opt['train'], opt, shuffle=True, training=True)
     test_loader = data_loader(opt['test'], opt, shuffle=False, training=False)
     best_model = train(train_loader, test_loader, opt)
-    test(test_loader, best_model)
+    y_true, y_pred = test(test_loader, best_model)
+    save(opt['encoder'], best_model, y_true, y_pred)
 

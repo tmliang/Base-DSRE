@@ -48,7 +48,7 @@ class Dataset(data.Dataset):
             else:
                 cur_bag = (ins['ent1']['id'], ins['ent2']['id'])  # used for test
 
-            if cur_bag != last_bag:
+            if cur_bag != last_bag or len(bag['rel']) >= self.max_bag_size:
                 if last_bag is not None:
                     self.data.append(bag)
                     bag = {
@@ -130,6 +130,7 @@ class Dataset(data.Dataset):
         self.max_length = opt['max_length']
         self.max_pos_length = opt['max_pos_length']
         self.training = training
+        self.max_bag_size = opt['max_bag_size']
         self.vec_save_dir = os.path.join(self.processed_data_dir, 'word_vec.npy')
         self.word2id_save_dir = os.path.join(self.processed_data_dir, 'word2id.json')
         self.init_rel()
@@ -162,6 +163,7 @@ class Dataset(data.Dataset):
         ent1 = torch.tensor(bag['ent1'],  dtype=torch.long)
         ent2 = torch.tensor(bag['ent2'],  dtype=torch.long)
         mask = torch.tensor(bag['mask'], dtype=torch.long)
+        length = torch.tensor(bag['length'], dtype=torch.long)
         rel = torch.tensor(bag['rel'],  dtype=torch.long)
         if self.training:
             rel = rel[0]
@@ -170,7 +172,7 @@ class Dataset(data.Dataset):
             for i in set(rel):
                 rel_mul[i] = 1
             rel = rel_mul
-        return word, pos1, pos2, ent1 , ent2 , mask, rel
+        return word, pos1, pos2, ent1, ent2, mask, length, rel
 
     def init_word(self):
         f = open(self.vec_dir)
@@ -215,7 +217,7 @@ class Dataset(data.Dataset):
 
 def collate_fn(X):
     X = list(zip(*X))
-    word, pos1, pos2, ent1, ent2, mask, rel = X
+    word, pos1, pos2, ent1, ent2, mask, length, rel = X
     scope = []
     ind = 0
     for w in word:
@@ -228,8 +230,9 @@ def collate_fn(X):
     mask = torch.cat(mask, 0)
     ent1 = torch.cat(ent1, 0)
     ent2 = torch.cat(ent2, 0)
+    length = torch.cat(length, 0)
     rel = torch.stack(rel)
-    return word, pos1, pos2, ent1, ent2, mask, scope, rel
+    return word, pos1, pos2, ent1, ent2, mask, length, scope, rel
 
 
 def data_loader(data_file, opt, shuffle, training=True, num_workers=4):
