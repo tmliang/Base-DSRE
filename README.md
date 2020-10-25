@@ -23,3 +23,6 @@ python main.py
 | PCNN | 77.0 | 75.0 | 72.7 | 73.4 | 41.4 |
 | CNN | 74.0 | 73.0 | 70.7 | 71.4 | 40.3 |
 | BiGRU | 57.0 | 53.0 | 51.3 | 51.9 | 34.1 |
+
+# PR Curves
+![](https://github.com/tmliang/Base-DSRE/blob/main/pr.jpg)
