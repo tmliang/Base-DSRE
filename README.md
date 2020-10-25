@@ -1,5 +1,5 @@
 # Base-DSRE
-Baselines of bag-level distantly supervised relation extraction models.
+Baselines of sentence-level attention-based distantly supervised relation extraction models.
 
 ## Requirements
 * python==3.8
