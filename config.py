@@ -8,7 +8,7 @@ def config():
     parser.add_argument('--test', default='test.txt')
     parser.add_argument('--rel', default='relation2id.txt')
     parser.add_argument('--vec', default='vec.txt')
-    parser.add_argument('--ckpt', default='pretrain/ckpt/model.pth.tar')
+    parser.add_argument('--save_dir', default='result')
     parser.add_argument('--processed_data_dir', default='_processed_data')
     parser.add_argument('--encoder', default='PCNN', type=str, help='PCNN, CNN or BiGRU')
     parser.add_argument('--batch_size', default=160, type=int)
