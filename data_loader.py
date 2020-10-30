@@ -19,14 +19,14 @@ class Dataset(data.Dataset):
                 line_data = {
                     "ent1": {"id": line[0], "name": line[2]},
                     "ent2": {"id": line[1], "name": line[3]},
-                    "rel": line[4],
+                    "rel": self.rel2id[line[4]] if line[4] in self.rel2id else self.rel2id['NA'],
                     "words": line[5:-1]
                 }
                 ori_data.append(line_data)
         print("Finish loading")
         # Sort data by entities and relations
         print("Sort data...")
-        ori_data.sort(key=lambda a: a['ent1']['id'] + '#' + a['ent2']['id'] + '#' + a['rel'])
+        ori_data.sort(key=lambda a: a['ent1']['id'] + '#' + a['ent2']['id'] + '#' + str(a['rel']))
         print("Finish sorting")
         # Pre-process data
         print("Pre-processing data...")
@@ -48,7 +48,7 @@ class Dataset(data.Dataset):
             else:
                 cur_bag = (ins['ent1']['id'], ins['ent2']['id'])  # used for test
 
-            if cur_bag != last_bag or len(bag['rel']) >= self.max_bag_size:
+            if cur_bag != last_bag:
                 if last_bag is not None:
                     self.data.append(bag)
                     bag = {
@@ -64,8 +64,7 @@ class Dataset(data.Dataset):
                 last_bag = cur_bag
 
             # rel
-            _rel = self.rel2id[ins['rel']] if ins['rel'] in self.rel2id else self.rel2id['NA']
-            bag['rel'].append(_rel)
+            bag['rel'].append(ins['rel'])
 
             # word
             words = ins['words']
@@ -130,7 +129,6 @@ class Dataset(data.Dataset):
         self.max_length = opt['max_length']
         self.max_pos_length = opt['max_pos_length']
         self.training = training
-        self.max_bag_size = opt['max_bag_size']
         self.vec_save_dir = os.path.join(self.processed_data_dir, 'word_vec.npy')
         self.word2id_save_dir = os.path.join(self.processed_data_dir, 'word2id.json')
         self.init_rel()
@@ -151,6 +149,7 @@ class Dataset(data.Dataset):
         except:
             print("Processed data does not exist")
             self._preprocess()
+        print("bag num:", self.__len__())
 
     def __len__(self):
         return len(self.data)
@@ -182,7 +181,7 @@ class Dataset(data.Dataset):
         for line in f.readlines():
             line = line.strip().split()
             word_vec[len(self.word2id)] = np.array(line[1:])
-            self.word2id[line[0]] = len(self.word2id)
+            self.word2id[line[0].lower()] = len(self.word2id)
         f.close()
         word_vec[len(self.word2id)] = np.random.randn(dim) / np.sqrt(dim)
         self.word2id['[UNK]'] = len(self.word2id)

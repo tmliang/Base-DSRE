@@ -24,7 +24,7 @@ def train(train_loader, test_loader, opt):
     if torch.cuda.is_available():
         model = model.cuda()
     criterion = nn.CrossEntropyLoss(weight=train_loader.dataset.loss_weight())
-    optimizer = optim.SGD(model.parameters(), lr=opt['lr'], weight_decay=1e-5)
+    optimizer = optim.SGD(model.parameters(), lr=opt['lr'])
     not_best_count = 0
     best_auc = 0
     best_model = model
@@ -65,6 +65,12 @@ def train(train_loader, test_loader, opt):
             y_true, y_pred = valid(test_loader, model)
             auc = metrics.average_precision_score(y_true, y_pred)
             print("\n[TEST] auc: {}".format(auc))
+            order = np.argsort(-y_pred)
+            p100 = (y_true[order[:100]]).mean() * 100
+            p200 = (y_true[order[:200]]).mean() * 100
+            p300 = (y_true[order[:300]]).mean() * 100
+            print("P@100: {0:.1f}, P@200: {1:.1f}, P@300: {2:.1f}, Mean: {3:.1f}".
+                  format(p100, p200, p300, (p100+p200+p300)/3))
             if auc > best_auc:
                 print("Best result!")
                 best_auc = auc
