@@ -18,9 +18,3 @@ class CNN(nn.Module):
         X, _ = torch.max(X, 1)
         X = F.relu(X)
         return X
-
-    def pool(self, X, X_mask):
-        X_mask = self.mask_embedding(X_mask)
-        hidden_size = X.shape[-1]
-        X = torch.max(torch.unsqueeze(X_mask, 2) * torch.unsqueeze(X, 3), 1)[0]
-        return X.view(-1, hidden_size * 3)
