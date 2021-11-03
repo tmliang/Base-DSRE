@@ -1,8 +1,6 @@
 # Base DSRE
 Baselines of bag-level distantly supervised relation extraction models.
 
-N<sub>r</sub>, N<sub>sys</sub>, N<sub>data</sub>
-
 ## Requirements
 * python==3.8
 * pytorch==1.6
